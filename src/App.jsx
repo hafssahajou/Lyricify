@@ -1,11 +1,38 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getLyrics, search } from './api/service';
+import { truncate } from './utils/truncate';
 
 export default function App() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [results, setResults] = useState([])
 
-    const handleSearch = () => {
-        console.log('Search term:', searchTerm);
-    };
+    const query = async (query = 'animals') => {
+        let response = await search(query)
+        response = await Promise.all(
+            response.map(async (track) => {
+                const lyrics = await fetchLyrics(track.track.track_id)
+                return {...track, lyrics}
+            })
+        )
+        console.log(response)
+        setResults(response)
+    }
+
+    const fetchLyrics = async (id = '77475678') => {
+        const response = await getLyrics(id)
+        return response
+    }
+
+    // console.log(fetchLyrics().then((res) => res))
+
+    useEffect(() => {
+        query()
+    }, [])
+
+    const handleSearch = (e) => {
+        e.preventDefault()
+        query(searchTerm)
+    }
 
     return (
         <div className="bg-zinc-900 text-white min-h-screen">
@@ -21,7 +48,7 @@ export default function App() {
                 </nav>
             </header>
 
-            <div className="flex justify-center items-center mt-8">
+            <form onSubmit={handleSearch} className="flex justify-center items-center mt-8">
                 <input
                     type="text"
                     placeholder="Search for songs..."
@@ -35,15 +62,21 @@ export default function App() {
                 >
                     Search
                 </button>
-            </div>
+            </form>
 
             <div className="container mx-auto mt-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <div className="bg-zinc-800 p-4 rounded-lg">
-                        <h2 className="text-lg font-bold">Song Title</h2>
-                        <p className="text-sm text-zinc-400">Artist Name</p>
-                        <p className="mt-2">Snippet of Lyrics...</p>
-                    </div>
+                    {results.length > 0 ? (
+                        results.map((track, index) => (
+                            <div key={index} className="bg-zinc-800 p-4 rounded-lg">
+                                <h2 className="text-lg font-bold">{track.track.track_name}</h2>
+                                <p className="text-sm text-zinc-400">{track.track.artist_name}</p>
+                                <p className="mt-2">{truncate(track.lyrics)}</p>
+                            </div>
+                        ))
+                    ) : (
+                        <h1>No data found.</h1>
+                    )}
                 </div>
             </div>
 

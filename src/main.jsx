@@ -6,6 +6,6 @@ import Lyric from "./lyric/Lyric.jsx";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Lyric />
+    <App />
   </React.StrictMode>,
 )
